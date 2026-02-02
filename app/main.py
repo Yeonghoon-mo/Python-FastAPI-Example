@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import uvicorn
-from app.routers import user_router, auth_router
+from app.routers import user_router, auth_router, post_router
 from app.core.database import engine, Base
 from app.core.logger import setup_logger
 
@@ -19,6 +19,7 @@ app = FastAPI(
 # 라우터 등록 (Spring의 Component Scan과 비슷한 역할)
 app.include_router(auth_router.router)
 app.include_router(user_router.router)
+app.include_router(post_router.router)
 
 @app.get("/")
 def root():

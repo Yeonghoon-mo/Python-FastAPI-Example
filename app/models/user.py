@@ -1,4 +1,5 @@
 from sqlalchemy import Boolean, Column, String
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 # [JPA: @Entity]
@@ -14,6 +15,8 @@ class User(Base):
     # 컬럼명을 hashed_password -> password 로 변경했습니다.
     password = Column(String(255))
 
-    # [JPA: @Column(columnDefinition = "TINYINT(1) default 1" )]
-    # 1 = 사용, 0 = 미사용
+    # [JPA: @Column(columnDefinition = "TINYINT(1) default 1")]
     is_active = Column(Boolean, default=True)
+
+    # [JPA: @OneToMany(mappedBy = "owner")]
+    posts = relationship("Post", back_populates="owner")
