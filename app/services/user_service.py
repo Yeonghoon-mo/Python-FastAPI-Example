@@ -34,4 +34,4 @@ def delete_user(db: Session, email: str):
     
     # 2. 삭제 수행
     user_repository.delete_user(db=db, db_user=db_user)
-    return {"message": "User deleted successfully"}
+    return {"유저 삭제 완료.": db_user}

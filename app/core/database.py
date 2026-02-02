@@ -1,14 +1,11 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-
-# [Spring: application.yml] DB 연결 URL
-# 형식: jdbc:mysql://localhost:3306/fastapi_db 와 동일
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:1361@127.0.0.1:3306/fastapi_db"
+from app.core.config import settings
 
 # [Spring: DataSource] 커넥션 풀(Connection Pool) 생성
 # echo=True: 실행되는 SQL을 콘솔에 출력 (Spring: spring.jpa.show-sql=true)
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, echo=True
+    settings.SQLALCHEMY_DATABASE_URL, echo=True
 )
 
 # [Spring: EntityManagerFactory] 트랜잭션 관리 및 세션 생성 공장
