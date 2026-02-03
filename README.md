@@ -115,6 +115,20 @@ app/
    uvicorn app.main:app --reload
    ```
 
+### DB Migration (Alembic)
+
+DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다.
+
+- **마이그레이션 파일 생성** (모델 변경 후 실행)
+  ```bash
+  alembic revision --autogenerate -m "메시지"
+  ```
+
+- **DB 반영** (최신 버전으로 업데이트)
+  ```bash
+  alembic upgrade head
+  ```
+
 ---
 
 ## 🗺️ Roadmap & Future Plans
@@ -134,7 +148,7 @@ app/
 - [x] **Board Domain**: 댓글(Comment) 기능 구현
 - [x] **Relationships**: Board(1) : Comment(N) 및 User(1) : Comment(N) 관계 매핑
 - [x] **Pagination**: 대용량 데이터를 위한 페이징 처리 (PageResponse 구현)
-- [ ] **File Upload**: 프로필 이미지 및 첨부파일 처리
+- [x] **File Upload**: 프로필 이미지 및 첨부파일 처리
 
 ### Phase 3: Advanced Tech
 - [ ] **Async I/O**: `async/await` 및 `aiomysql` 도입으로 완전 비동기 전환
@@ -160,6 +174,25 @@ app/
 | **Configuration** | `application.yml` | `pydantic-settings` |
 | **Pagination** | `org.springframework.data.domain.Page` | `PageResponse` (Custom) |
 | **Entry Point** | `public static void main` | `if __name__ == "__main__":` |
+
+---
+
+## 🛠 Technical Deep Dive (Portfolio)
+
+### 1. File Upload Strategy
+이미지 및 파일 업로드를 안전하고 효율적으로 처리하기 위해 다음과 같은 전략을 사용했습니다.
+
+- **UUID Filename**: 사용자가 업로드한 파일명 중복을 방지하고 보안(경로 탐색 공격 방지)을 위해 `UUID v4`를 사용하여 파일명을 난수화했습니다.
+- **Directory Isolation**: `static/uploads/profiles`와 `static/uploads/boards`로 디렉토리를 분리하여 관리 효율성을 높였습니다.
+- **Service Layer Abstraction**: `FileService` 클래스를 별도로 구현하여 파일 저장/삭제 로직을 비즈니스 로직과 분리, 재사용성을 확보했습니다. (SRP 원칙)
+- **Static Mounting**: FastAPI의 `StaticFiles`를 활용하여 별도의 웹 서버(Nginx 등) 없이도 개발 환경에서 즉시 이미지를 서빙할 수 있도록 구성했습니다.
+
+### 2. DB Migration with Alembic
+초기 개발 단계에서 잦은 DB 스키마 변경에 유연하게 대처하기 위해 **Alembic**을 도입했습니다.
+
+- **Problem**: 모델(`models.py`) 수정 후 테이블을 수동으로 `DROP` & `CREATE` 하거나, 직접 `ALTER` 쿼리를 작성해야 하는 번거로움과 위험성 존재.
+- **Solution**: Alembic을 통해 Python 모델 코드의 변경 사항을 감지하여 자동으로 마이그레이션 스크립트를 생성(`--autogenerate`)하고, 버전 관리(Versioning)가 가능하도록 구축했습니다.
+- **Workflow**: `Model 수정` -> `alembic revision` -> `alembic upgrade`
 
 ---
 
