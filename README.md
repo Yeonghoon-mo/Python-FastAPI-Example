@@ -181,6 +181,21 @@ DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다
 - [x] **Testing**: Pytest를 이용한 단위 테스트 및 통합 테스트 작성 완료
 - [x] **CI/CD**: GitHub Actions를 통한 자동 배포 파이프라인 구축 완료 (Continuous Integration)
 
+### Phase 5: Observability & Monitoring (🚧 Next Step)
+- [ ] **Metrics**: Prometheus & Grafana를 활용한 서버 리소스 및 트래픽 시각화
+- [ ] **Logging Aggregation**: Loki 또는 ELK Stack을 이용한 분산 로그 수집 시스템 구축
+- [ ] **Health Check**: 엔드포인트별 상태 모니터링 및 알림 설정 (Slack/Discord)
+
+### Phase 6: Security & User Experience
+- [ ] **OAuth2**: Google, GitHub, Kakao 등 소셜 로그인 연동
+- [ ] **RBAC**: Role-Based Access Control (Admin, User, Guest) 권한 체계 세분화
+- [ ] **SSL/TLS**: Let's Encrypt를 활용한 HTTPS 적용 (Nginx Reverse Proxy)
+
+### Phase 7: Performance & Stability
+- [ ] **Rate Limiting**: Redis를 활용한 API 요청 제한 (Throttling)
+- [ ] **API Versioning**: `/v1`, `/v2` 등 유연한 API 버전 관리 전략 도입
+- [ ] **Load Testing**: Locust 또는 k6를 이용한 성능 측정 및 병목 구간 개선
+
 ---
 
 ## 💡 Spring Boot vs FastAPI Comparison
