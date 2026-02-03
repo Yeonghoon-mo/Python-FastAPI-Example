@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 from app.repository import board_repository
 from app.schemas.board import BoardCreate, BoardUpdate
@@ -7,13 +7,13 @@ from app.services.file_service import FileService
 import math
 from app.schemas.page import PageResponse
 
-def create_new_board(db: Session, board: BoardCreate, user_id: str, image_url: str = None):
-    return board_repository.create_board(db=db, board=board, user_id=user_id, image_url=image_url)
+async def create_new_board(db: AsyncSession, board: BoardCreate, user_id: str, image_url: str = None):
+    return await board_repository.create_board(db=db, board=board, user_id=user_id, image_url=image_url)
 
-def get_boards_list(db: Session, page: int = 1, size: int = 10):
+async def get_boards_list(db: AsyncSession, page: int = 1, size: int = 10):
     skip = (page - 1) * size
-    items = board_repository.get_boards(db=db, skip=skip, limit=size)
-    total_count = board_repository.get_boards_count(db=db)
+    items = await board_repository.get_boards(db=db, skip=skip, limit=size)
+    total_count = await board_repository.get_boards_count(db=db)
     total_pages = math.ceil(total_count / size) if total_count > 0 else 0
     
     return PageResponse(
@@ -24,14 +24,14 @@ def get_boards_list(db: Session, page: int = 1, size: int = 10):
         total_pages=total_pages
     )
 
-def get_board_detail(db: Session, board_id: int):
-    db_board = board_repository.get_board(db, board_id=board_id)
+async def get_board_detail(db: AsyncSession, board_id: int):
+    db_board = await board_repository.get_board(db, board_id=board_id)
     if db_board is None:
         raise HTTPException(status_code=404, detail="Board not found")
     return db_board
 
-def update_existing_board(db: Session, board_id: int, board_update: BoardUpdate, user_id: str, image_url: str = None):
-    db_board = get_board_detail(db, board_id)
+async def update_existing_board(db: AsyncSession, board_id: int, board_update: BoardUpdate, user_id: str, image_url: str = None):
+    db_board = await get_board_detail(db, board_id)
     
     # 본인 확인
     if db_board.user_id != user_id:
@@ -43,10 +43,10 @@ def update_existing_board(db: Session, board_id: int, board_update: BoardUpdate,
             FileService.delete_file(db_board.image_url)
         db_board.image_url = image_url
         
-    return board_repository.update_board(db=db, db_board=db_board, board_update=board_update)
+    return await board_repository.update_board(db=db, db_board=db_board, board_update=board_update)
 
-def delete_existing_board(db: Session, board_id: int, user_id: str):
-    db_board = get_board_detail(db, board_id)
+async def delete_existing_board(db: AsyncSession, board_id: int, user_id: str):
+    db_board = await get_board_detail(db, board_id)
     
     # 본인 확인
     if db_board.user_id != user_id:
@@ -56,5 +56,5 @@ def delete_existing_board(db: Session, board_id: int, user_id: str):
     if db_board.image_url:
         FileService.delete_file(db_board.image_url)
         
-    board_repository.delete_board(db=db, db_board=db_board)
+    await board_repository.delete_board(db=db, db_board=db_board)
     return {"message": "Board deleted successfully"}

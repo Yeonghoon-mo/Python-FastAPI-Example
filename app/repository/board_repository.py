@@ -1,32 +1,39 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 from app.models.board import Board
 from app.schemas.board import BoardCreate, BoardUpdate
 
-def get_board(db: Session, board_id: int):
-    return db.query(Board).filter(Board.id == board_id).first()
+async def get_board(db: AsyncSession, board_id: int):
+    stmt = select(Board).where(Board.id == board_id)
+    result = await db.execute(stmt)
+    return result.scalars().first()
 
-def get_boards(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(Board).order_by(Board.id.desc()).offset(skip).limit(limit).all()
+async def get_boards(db: AsyncSession, skip: int = 0, limit: int = 100):
+    stmt = select(Board).order_by(Board.id.desc()).offset(skip).limit(limit)
+    result = await db.execute(stmt)
+    return result.scalars().all()
 
-def get_boards_count(db: Session):
-    return db.query(Board).count()
+async def get_boards_count(db: AsyncSession):
+    stmt = select(func.count()).select_from(Board)
+    result = await db.execute(stmt)
+    return result.scalar()
 
-def create_board(db: Session, board: BoardCreate, user_id: str, image_url: str = None):
+async def create_board(db: AsyncSession, board: BoardCreate, user_id: str, image_url: str = None):
     db_board = Board(**board.model_dump(), user_id=user_id, image_url=image_url)
     db.add(db_board)
-    db.commit()
-    db.refresh(db_board)
+    await db.commit()
+    await db.refresh(db_board)
     return db_board
 
-def update_board(db: Session, db_board: Board, board_update: BoardUpdate):
+async def update_board(db: AsyncSession, db_board: Board, board_update: BoardUpdate):
     update_data = board_update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_board, key, value)
     
-    db.commit()
-    db.refresh(db_board)
+    await db.commit()
+    await db.refresh(db_board)
     return db_board
 
-def delete_board(db: Session, db_board: Board):
-    db.delete(db_board)
-    db.commit()
+async def delete_board(db: AsyncSession, db_board: Board):
+    await db.delete(db_board)
+    await db.commit()

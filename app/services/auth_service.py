@@ -1,5 +1,5 @@
 from datetime import timedelta
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
 from app.core import security
@@ -8,9 +8,9 @@ from app.repository import user_repository
 
 # [Spring: AuthService]
 
-def login(db: Session, form_data):
+async def login(db: AsyncSession, form_data):
     # 1. 유저 확인
-    user = user_repository.get_user(db, email=form_data.username)
+    user = await user_repository.get_user(db, email=form_data.username)
     
     # 2. 비밀번호 검증
     if not user or not security.verify_password(form_data.password, user.password):

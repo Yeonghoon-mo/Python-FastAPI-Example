@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     # DB URL 자동 생성
     @property
     def SQLALCHEMY_DATABASE_URL(self) -> str:
-        return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        return f"mysql+aiomysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     # .env 파일 로드 설정 (절대 경로 사용)
     model_config = SettingsConfigDict(

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 
 from app.core.database import get_db
@@ -21,7 +21,7 @@ async def create_board(
     title: str = Form(...),
     content: str = Form(...),
     file: Optional[UploadFile] = File(None),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     image_url = None
@@ -29,7 +29,7 @@ async def create_board(
         image_url = await FileService.save_file(file, sub_dir="boards")
         
     board = BoardCreate(title=title, content=content)
-    return board_service.create_new_board(db=db, board=board, user_id=current_user.email, image_url=image_url)
+    return await board_service.create_new_board(db=db, board=board, user_id=current_user.email, image_url=image_url)
 
 # 수정 (Multipart/form-data)
 @router.put("/{board_id}", response_model=BoardResponse)
@@ -38,7 +38,7 @@ async def update_board(
     title: Optional[str] = Form(None),
     content: Optional[str] = Form(None),
     file: Optional[UploadFile] = File(None),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     image_url = None
@@ -46,29 +46,29 @@ async def update_board(
         image_url = await FileService.save_file(file, sub_dir="boards")
     
     board_update = BoardUpdate(title=title, content=content)
-    return board_service.update_existing_board(
+    return await board_service.update_existing_board(
         db=db, board_id=board_id, board_update=board_update, user_id=current_user.email, image_url=image_url
     )
 
 # 목록 조회 (Pagination 적용)
 @router.get("/", response_model=PageResponse[BoardResponse])
-def read_boards(
+async def read_boards(
     page: int = 1, 
     size: int = 10, 
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
-    return board_service.get_boards_list(db=db, page=page, size=size)
+    return await board_service.get_boards_list(db=db, page=page, size=size)
 
 # 단건 조회
 @router.get("/{board_id}", response_model=BoardResponse)
-def read_board(board_id: int, db: Session = Depends(get_db)):
-    return board_service.get_board_detail(db=db, board_id=board_id)
+async def read_board(board_id: int, db: AsyncSession = Depends(get_db)):
+    return await board_service.get_board_detail(db=db, board_id=board_id)
 
 # 삭제
 @router.delete("/{board_id}")
-def delete_board(
+async def delete_board(
     board_id: int, 
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return board_service.delete_existing_board(db=db, board_id=board_id, user_id=current_user.email)
+    return await board_service.delete_existing_board(db=db, board_id=board_id, user_id=current_user.email)

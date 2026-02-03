@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 
 from app.repository import user_repository
@@ -6,40 +6,40 @@ from app.schemas.user import UserCreate, UserUpdate
 
 # [Spring: @Service]
 
-def create_user(db: Session, user: UserCreate):
-    db_user = user_repository.get_user(db, email=user.email)
+async def create_user(db: AsyncSession, user: UserCreate):
+    db_user = await user_repository.get_user(db, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="이미 존재하는 이메일 계정입니다.")
     
-    return user_repository.create_user(db=db, user=user)
+    return await user_repository.create_user(db=db, user=user)
 
-def get_user(db: Session, email: str):
-    db_user = user_repository.get_user(db, email=email)
+async def get_user(db: AsyncSession, email: str):
+    db_user = await user_repository.get_user(db, email=email)
     if db_user is None:
         raise HTTPException(status_code=404, detail="해당 Email의 유저가 존재하지 않습니다.")
     return db_user
 
 # 유저 수정
-def update_user(db: Session, email: str, user_update: UserUpdate):
+async def update_user(db: AsyncSession, email: str, user_update: UserUpdate):
     # 1. 수정할 유저가 존재하는지 확인
-    db_user = get_user(db, email) # 없으면 여기서 404 발생
+    db_user = await get_user(db, email) # 없으면 여기서 404 발생
     
     # 2. 업데이트 수행
-    return user_repository.update_user(db=db, db_user=db_user, user_update=user_update)
+    return await user_repository.update_user(db=db, db_user=db_user, user_update=user_update)
 
 # 유저 삭제
-def delete_user(db: Session, email: str):
+async def delete_user(db: AsyncSession, email: str):
     # 1. 삭제할 유저가 존재하는지 확인
-    db_user = get_user(db, email) # 없으면 여기서 404 발생
+    db_user = await get_user(db, email) # 없으면 여기서 404 발생
     
     # 2. 삭제 수행
-    user_repository.delete_user(db=db, db_user=db_user)
+    await user_repository.delete_user(db=db, db_user=db_user)
     return {"유저 삭제 완료.": db_user}
 
 # 프로필 이미지 업데이트
-def update_profile_image(db: Session, email: str, image_url: str):
-    db_user = get_user(db, email)
+async def update_profile_image(db: AsyncSession, email: str, image_url: str):
+    db_user = await get_user(db, email)
     db_user.profile_image_url = image_url
-    db.commit()
-    db.refresh(db_user)
+    await db.commit()
+    await db.refresh(db_user)
     return db_user
