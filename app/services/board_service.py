@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
 from app.repository import board_repository
-from app.schemas.board import BoardCreate, BoardUpdate
+from app.schemas.board import BoardCreate, BoardUpdate, BoardResponse
 from app.services.file_service import FileService
 from app.core.redis import redis_client
 import json
@@ -23,12 +23,15 @@ async def get_boards_list(db: AsyncSession, page: int = 1, size: int = 10):
 
     # 2. DB 조회 (캐시 Miss)
     skip = (page - 1) * size
-    items = await board_repository.get_boards(db=db, skip=skip, limit=size)
+
+    db_items = await board_repository.get_boards(db=db, skip=skip, limit=size)
     total_count = await board_repository.get_boards_count(db=db)
     total_pages = math.ceil(total_count / size) if total_count > 0 else 0
+
+    items_data = [BoardResponse.model_validate(item) for item in db_items]
     
     response = PageResponse(
-        items=items,
+        items=items_data,
         total_count=total_count,
         page=page,
         size=size,
