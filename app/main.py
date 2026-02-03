@@ -6,6 +6,7 @@ from app.routers import user_router, auth_router, board_router, comment_router
 from app.core.database import engine, Base
 from app.core.logger import setup_logger
 from app.core.config import settings
+from app.core.redis import close_redis_connection
 import os
 
 # 로거 설정 초기화
@@ -23,7 +24,9 @@ async def lifespan(app: FastAPI):
         os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
     
     yield
-    # Shutdown (필요 시 리소스 정리)
+    
+    # Shutdown
+    await close_redis_connection()
 
 app = FastAPI(
     title="FastAPI MariaDB CRUD",

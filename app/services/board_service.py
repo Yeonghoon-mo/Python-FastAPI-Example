@@ -3,26 +3,43 @@ from fastapi import HTTPException
 from app.repository import board_repository
 from app.schemas.board import BoardCreate, BoardUpdate
 from app.services.file_service import FileService
-
+from app.core.redis import redis_client
+import json
 import math
 from app.schemas.page import PageResponse
 
 async def create_new_board(db: AsyncSession, board: BoardCreate, user_id: str, image_url: str = None):
+    # 캐시 무효화 (새 글 작성 시 목록 캐시 제거)
+    await redis_client.delete("boards_page_1") # 단순 예시: 1페이지만 제거하거나 패턴 매칭으로 제거
     return await board_repository.create_board(db=db, board=board, user_id=user_id, image_url=image_url)
 
 async def get_boards_list(db: AsyncSession, page: int = 1, size: int = 10):
+    cache_key = f"boards_page_{page}_size_{size}"
+    
+    # 1. 캐시 조회
+    cached_data = await redis_client.get(cache_key)
+    if cached_data:
+        return PageResponse(**json.loads(cached_data))
+
+    # 2. DB 조회 (캐시 Miss)
     skip = (page - 1) * size
     items = await board_repository.get_boards(db=db, skip=skip, limit=size)
     total_count = await board_repository.get_boards_count(db=db)
     total_pages = math.ceil(total_count / size) if total_count > 0 else 0
     
-    return PageResponse(
+    response = PageResponse(
         items=items,
         total_count=total_count,
         page=page,
         size=size,
         total_pages=total_pages
     )
+    
+    # 3. 캐시 저장 (TTL 60초)
+    # Pydantic 모델을 JSON으로 직렬화
+    await redis_client.set(cache_key, response.model_dump_json(), ex=60)
+    
+    return response
 
 async def get_board_detail(db: AsyncSession, board_id: int):
     db_board = await board_repository.get_board(db, board_id=board_id)
