@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
     # Uploads
-    UPLOAD_DIR: str = "static/uploads"
+    UPLOAD_DIR: str = "app/static/uploads"
+    STATIC_DIR: Path = BASE_DIR / "app" / "static"
 
     # DB URL 자동 생성
     @property
@@ -28,8 +29,20 @@ class Settings(BaseSettings):
 
     # Redis
     REDIS_HOST: str
-    REDIS_PORT: int
-    REDIS_DB: int
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+
+    @property
+    def CELERY_BROKER_URL(self) -> str:
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{self.REDIS_DB}"
+
+    # SMTP (Email)
+    SMTP_HOST: str | None = None
+    SMTP_PORT: int | None = None
+    SMTP_USER: str | None = None
+    SMTP_PASSWORD: str | None = None
+    SMTP_TLS: bool = True
+    SMTP_SSL: bool = False
 
     # .env 파일 로드 설정 (절대 경로 사용)
     model_config = SettingsConfigDict(
