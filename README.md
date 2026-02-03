@@ -88,8 +88,8 @@ app/
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/Yeonghoon-mo/fastapi-mariadb-crud.git
-   cd fastapi-mariadb-crud
+   git clone https://github.com/Yeonghoon-mo/FastAPI-Enterprise-Architecture.git
+   cd FastAPI-Enterprise-Architecture
    ```
 
 2. **Create Virtual Environment**

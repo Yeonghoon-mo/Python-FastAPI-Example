@@ -30,8 +30,8 @@ async def lifespan(app: FastAPI):
     await close_redis_connection()
 
 app = FastAPI(
-    title="FastAPI MariaDB CRUD",
-    description="Spring 개발자를 위한 FastAPI CRUD 예제 프로젝트",
+    title="FastAPI Enterprise Architecture",
+    description="Spring Boot의 견고한 구조를 이식한 엔터프라이즈급 FastAPI 보일러플레이트",
     version="0.0.1",
     lifespan=lifespan
 )
