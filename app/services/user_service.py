@@ -3,6 +3,7 @@ from fastapi import HTTPException
 
 from app.repository import user_repository
 from app.schemas.user import UserCreate, UserUpdate
+from app.tasks.email_task import send_welcome_email
 
 # [Spring: @Service]
 
@@ -11,7 +12,12 @@ async def create_user(db: AsyncSession, user: UserCreate):
     if db_user:
         raise HTTPException(status_code=400, detail="이미 존재하는 이메일 계정입니다.")
     
-    return await user_repository.create_user(db=db, user=user)
+    new_user = await user_repository.create_user(db=db, user=user)
+    
+    # 회원가입 성공 시 웰컴 이메일 발송 (비동기 Task)
+    send_welcome_email.delay(new_user.email)
+    
+    return new_user
 
 async def get_user(db: AsyncSession, email: str):
     db_user = await user_repository.get_user(db, email=email)

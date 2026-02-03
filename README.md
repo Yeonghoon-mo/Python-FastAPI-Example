@@ -21,6 +21,10 @@ graph LR
     Router --> |DTO| Service(Service Layer)
     Service --> |Domain Model| Repository(Data Access Layer)
     Repository --> |SQL| DB[(MariaDB)]
+    
+    Service -.-> |Cache| Redis[(Redis)]
+    Service -.-> |Async Task| Celery(Celery Worker)
+    Celery -.-> |Broker| Redis
 ```
 
 ### 📂 Directory Structure
@@ -107,6 +111,19 @@ app/
    SECRET_KEY=your_secret_key_openssl_rand_hex_32
    ALGORITHM=HS256
    ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+   # Redis
+   REDIS_HOST=127.0.0.1
+   REDIS_PORT=6379
+   REDIS_DB=0
+
+   # SMTP (Email)
+   SMTP_HOST=your_smtp_host
+   SMTP_PORT=587
+   SMTP_USER=your_email@example.com
+   SMTP_PASSWORD=your_email_password
+   SMTP_TLS=True
+   SMTP_SSL=False
    ```
 
 5. **Run Server**
@@ -153,7 +170,7 @@ DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다
 ### Phase 3: Advanced Tech
 - [x] **Async I/O**: `async/await` 및 `aiomysql` 도입으로 완전 비동기 전환
 - [x] **Caching**: Redis를 활용한 데이터 캐싱 및 세션 관리
-- [ ] **Background Tasks**: Celery 또는 RabbitMQ를 이용한 비동기 작업 처리 (이메일 발송 등)
+- [x] **Background Tasks**: Celery 또는 RabbitMQ를 이용한 비동기 작업 처리 (이메일 발송 등)
 
 ### Phase 4: DevOps & Quality
 - [ ] **Testing**: Pytest를 이용한 단위 테스트 및 통합 테스트 작성
