@@ -44,6 +44,11 @@ class Settings(BaseSettings):
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False
 
+    # Google OAuth2
+    GOOGLE_CLIENT_ID: str | None = None
+    GOOGLE_CLIENT_SECRET: str | None = None
+    GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/auth/google/callback"
+
     # .env 파일 로드 설정 (절대 경로 사용)
     model_config = SettingsConfigDict(
         env_file=str(ENV_PATH), 

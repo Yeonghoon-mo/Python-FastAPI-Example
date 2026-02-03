@@ -12,8 +12,14 @@ class User(Base):
     email = Column(String(255), primary_key=True, index=True, nullable=False)
 
     # [JPA: @Column]
-    # 컬럼명을 hashed_password -> password 로 변경했습니다.
-    password = Column(String(255), nullable=False)
+    # 소셜 로그인의 경우 비밀번호가 없을 수 있으므로 nullable=True로 변경
+    password = Column(String(255), nullable=True)
+
+    # 인증 제공자 (local, google, github 등)
+    provider = Column(String(50), default="local", nullable=False)
+    
+    # 소셜 서비스에서 제공하는 고유 ID
+    social_id = Column(String(255), nullable=True)
 
     # [JPA: @Column(columnDefinition = "TINYINT(1) default 1")]
     is_active = Column(Boolean, default=True)

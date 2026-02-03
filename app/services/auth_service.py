@@ -13,8 +13,8 @@ async def login(db: AsyncSession, form_data):
     # 1. 유저 확인
     user = await user_repository.get_user(db, email=form_data.username)
     
-    # 2. 비밀번호 검증
-    if not user or not security.verify_password(form_data.password, user.password):
+    # 2. 비밀번호 검증 (소셜 로그인 유저는 password가 None일 수 있음)
+    if not user or not user.password or not security.verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",

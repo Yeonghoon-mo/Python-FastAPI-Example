@@ -1,5 +1,5 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,14 +9,15 @@ from app.repository import user_repository
 from app.models.user import User
 from app.core.redis import redis_client
 
-# 토큰을 추출할 엔드포인트 지정 (Swagger의 Authorize 버튼 활성화)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+# 토큰을 직접 입력할 수 있는 Bearer Token 스키마 설정
+security = HTTPBearer()
 
 # [보안 의존성] 현재 로그인한 유저 가져오기
 async def get_current_user(
-    token: str = Depends(oauth2_scheme), 
+    auth: HTTPAuthorizationCredentials = Depends(security), 
     db: AsyncSession = Depends(get_db)
 ) -> User:
+    token = auth.credentials
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

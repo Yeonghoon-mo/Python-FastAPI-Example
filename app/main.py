@@ -45,10 +45,10 @@ if not os.path.exists(settings.STATIC_DIR):
 app.mount("/static", StaticFiles(directory=str(settings.STATIC_DIR)), name="static")
 
 # 라우터 등록
-app.include_router(auth_router.router)
-app.include_router(user_router.router)
-app.include_router(board_router.router)
-app.include_router(comment_router.router)
+app.include_router(auth_router.router, prefix="/api")
+app.include_router(user_router.router, prefix="/api")
+app.include_router(board_router.router, prefix="/api")
+app.include_router(comment_router.router, prefix="/api")
 
 @app.get("/")
 async def root():

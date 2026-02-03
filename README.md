@@ -57,8 +57,9 @@ app/
 
 ### 🔐 1. Authentication & Security
 - **JWT (JSON Web Token)** 기반 인증 시스템 구축.
+- **Google OAuth2**: Google 소셜 로그인 연동 및 신규 유저 자동 가입 로직 구현.
 - **BCrypt** 알고리즘을 사용한 비밀번호 단방향 암호화.
-- **OAuth2PasswordBearer**를 통한 표준 보안 스키마 적용.
+- **HTTPBearer**: Swagger UI에서 토큰을 직접 입력하여 테스트할 수 있는 보안 스키마 적용.
 - `Depends(get_current_user)`를 통한 엔드포인트별 권한 제어 (Guard).
 
 ### 🛠 2. Robust CRUD Operations
@@ -176,25 +177,22 @@ DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다
 - [x] **Caching**: Redis를 활용한 데이터 캐싱 및 세션 관리
 - [x] **Background Tasks**: Celery & Redis를 이용한 비동기 작업 처리 (이메일 발송 등)
 
-### Phase 4: DevOps & Quality (✅ Completed)
+### Phase 4: DevOps & Observability (✅ Completed)
 - [x] **Docker**: Dockerfile 및 docker-compose 구성 완료 (Infrastructure as Code)
 - [x] **Testing**: Pytest를 이용한 단위 테스트 및 통합 테스트 작성 완료
 - [x] **CI/CD**: GitHub Actions를 통한 자동 배포 파이프라인 구축 완료 (Continuous Integration)
-
-### Phase 5: Observability & Monitoring (✅ Completed)
 - [x] **Metrics**: Prometheus & Grafana를 활용한 서버 리소스 및 트래픽 시각화 환경 구축
-- [ ] **Logging Aggregation**: Loki 또는 ELK Stack을 이용한 분산 로그 수집 시스템 구축
-- [ ] **Health Check**: 엔드포인트별 상태 모니터링 및 알림 설정 (Slack/Discord)
 
-### Phase 6: Security & User Experience
-- [ ] **OAuth2**: Google, GitHub, Kakao 등 소셜 로그인 연동
+### Phase 5: Security & User Experience (🚧 In Progress)
+- [ ] **OAuth2**: Google(✅), GitHub, Kakao 등 소셜 로그인 연동
+    - Google 로그인 연동 및 자체 JWT 발급 로직 구현 완료
 - [ ] **RBAC**: Role-Based Access Control (Admin, User, Guest) 권한 체계 세분화
 - [ ] **SSL/TLS**: Let's Encrypt를 활용한 HTTPS 적용 (Nginx Reverse Proxy)
 
-### Phase 7: Performance & Stability
+### Phase 6: Performance & Stability
 - [ ] **Rate Limiting**: Redis를 활용한 API 요청 제한 (Throttling)
 - [ ] **API Versioning**: `/v1`, `/v2` 등 유연한 API 버전 관리 전략 도입
-- [ ] **Load Testing**: Locust 또는 k6를 이용한 성능 측정 및 병목 구간 개선
+- [ ] **API Documentation**: Swagger UI 상세화 및 ReDoc 도입을 통한 기술 명세 고도화
 
 ---
 
@@ -215,7 +213,14 @@ DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다
 
 ## 🛠 Technical Deep Dive (Portfolio)
 
-### 1. File Upload Strategy
+### 1. Social Login Strategy (OAuth2)
+Google 소셜 로그인을 Spring Boot의 서비스 추상화 패턴을 벤치마킹하여 구현했습니다.
+
+- **Non-blocking Auth**: `httpx` 비동기 클라이언트를 사용하여 Google API와의 토큰 교환 및 유저 정보 조회를 Non-blocking으로 처리했습니다.
+- **Soft Registration**: 소셜 로그인 시 DB에 유저가 없으면 자동으로 신규 가입(`provider='google'`)을 진행하고, 이미 존재하는 유저라면 소셜 정보를 연동하도록 설계했습니다.
+- **Unified JWT Issue**: 일반 로그인과 소셜 로그인 모두 최종적으로는 서버의 자체 JWT를 발급하도록 하여 프론트엔드에서의 토큰 관리 로직을 통일했습니다.
+
+### 2. File Upload Strategy
 이미지 및 파일 업로드를 안전하고 효율적으로 처리하기 위해 다음과 같은 전략을 사용했습니다.
 
 - **UUID Filename**: 사용자가 업로드한 파일명 중복을 방지하고 보안(경로 탐색 공격 방지)을 위해 `UUID v4`를 사용하여 파일명을 난수화했습니다.
@@ -223,12 +228,12 @@ DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다
 - **Service Layer Abstraction**: `FileService` 클래스를 별도로 구현하여 파일 저장/삭제 로직을 비즈니스 로직과 분리, 재사용성을 확보했습니다. (SRP 원칙)
 - **Static Mounting**: FastAPI의 `StaticFiles`를 활용하여 별도의 웹 서버(Nginx 등) 없이도 개발 환경에서 즉시 이미지를 서빙할 수 있도록 구성했습니다.
 
-### 2. DB Migration with Alembic
-초기 개발 단계에서 잦은 DB 스키마 변경에 유연하게 대처하기 위해 **Alembic**을 도입했습니다.
+### 3. DB Migration with Alembic (Versioning)
+데이터베이스의 스키마 변경 이력을 코드 레벨에서 관리하기 위해 **Alembic**을 적극 활용했습니다.
 
-- **Problem**: 모델(`models.py`) 수정 후 테이블을 수동으로 `DROP` & `CREATE` 하거나, 직접 `ALTER` 쿼리를 작성해야 하는 번거로움과 위험성 존재.
-- **Solution**: Alembic을 통해 Python 모델 코드의 변경 사항을 감지하여 자동으로 마이그레이션 스크립트를 생성(`--autogenerate`)하고, 버전 관리(Versioning)가 가능하도록 구축했습니다.
-- **Workflow**: `Model 수정` -> `alembic revision` -> `alembic upgrade`
+- **Alembic Versioning**: `alembic_version` 테이블을 통해 현재 DB 상태를 추적하며, 협업 및 배포 환경에서도 동일한 스키마를 유지할 수 있도록 구축했습니다.
+- **Workflow**: 모델 수정 시 마이그레이션 파일 생성(`revision --autogenerate`) 및 반영(`upgrade head`) 프로세스를 정립했습니다.
+- **Problem & Solution**: 모델(`models.py`) 수정 후 수동으로 DB를 건드려야 하는 위험성을 제거하고, 버전 관리(Versioning)가 가능하도록 자동화했습니다.
 
 ### 3. Asynchronous I/O (Async/Await)
 고성능 처리를 위해 데이터베이스 접근 방식을 **동기(Sync)**에서 **비동기(Async)**로 전면 전환했습니다.
@@ -311,6 +316,15 @@ DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다
 - **Issue**: CD 워크플로우는 성공(Green)으로 표시되지만, 실제 서버의 도커 컨테이너는 기존 버전을 유지함.
 - **Cause**: 현재 CD 설정이 이미지를 빌드하여 GHCR에 **Push**하는 단계까지만 구현되어 있음. 서버에서 새 이미지를 **Pull** 받고 컨테이너를 **Restart**하는 배포(Deployment) 로직이 주석 처리되어 있거나 Secret 미설정으로 작동하지 않음.
 - **Solution**: `cd.yml` 내 배포 섹션(SSH 연동 등)을 활성화하고, GitHub Repository Secrets에 서버 접속 정보(`SERVER_HOST`, `SSH_PRIVATE_KEY` 등)를 등록하여 자동 배포를 완성해야 함.
+
+### 10. OAuth2 Callback 404 Not Found
+- **Issue**: Google 로그인 성공 후 콜백 URI 접속 시 `{"detail":"Not Found"}` 에러 발생.
+- **Cause**: Google Console에 등록된 리다이렉트 URI와 FastAPI 라우터에 등록된 주소 체계가 불일치함.
+- **Solution**: `main.py`에서 라우터 등록 시 `prefix="/api"`를 일괄 적용하여 모든 API 주소를 `/api` 하위로 통일하고, Google Console 설정을 이에 맞춰 수정하여 해결했습니다.
+
+### 11. Swagger UI Token Input Convenience
+- **Issue**: `OAuth2PasswordBearer` 사용 시 Swagger 상단 'Authorize' 버튼에서 ID/PW를 매번 입력해야 하는 번거로움 발생. 소셜 로그인으로 받은 토큰을 직접 테스트하기 불편함.
+- **Solution**: `HTTPBearer` 보안 스키마로 전환하여 Swagger에서 'Value' 칸 하나만 나타나게 수정, 복사한 JWT를 즉시 붙여넣어 테스트할 수 있는 환경을 구축했습니다.
 
 ---
 
