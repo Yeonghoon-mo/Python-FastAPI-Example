@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from prometheus_fastapi_instrumentator import Instrumentator
 import uvicorn
 from contextlib import asynccontextmanager
 from app.routers import user_router, auth_router, board_router, comment_router
@@ -34,6 +35,9 @@ app = FastAPI(
     version="0.0.1",
     lifespan=lifespan
 )
+
+# Prometheus 메트릭 설정 (Instrumentator)
+Instrumentator().instrument(app).expose(app)
 
 # 정적 파일 서버 설정 (프로필 이미지 등)
 if not os.path.exists(settings.STATIC_DIR):
