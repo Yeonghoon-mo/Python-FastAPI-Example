@@ -20,6 +20,7 @@ class BoardUpdate(BaseModel):
 class BoardResponse(BoardBase):
     id: int
     user_id: str
+    image_url: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

@@ -18,6 +18,9 @@ class User(Base):
     # [JPA: @Column(columnDefinition = "TINYINT(1) default 1")]
     is_active = Column(Boolean, default=True)
 
+    # 프로필 이미지 경로 저장
+    profile_image_url = Column(String(500), nullable=True)
+
     # [JPA: @OneToMany(mappedBy = "owner")]
     boards = relationship("Board", back_populates="owner")
     comments = relationship("Comment", back_populates="owner")

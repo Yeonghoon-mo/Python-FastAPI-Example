@@ -35,3 +35,11 @@ def delete_user(db: Session, email: str):
     # 2. 삭제 수행
     user_repository.delete_user(db=db, db_user=db_user)
     return {"유저 삭제 완료.": db_user}
+
+# 프로필 이미지 업데이트
+def update_profile_image(db: Session, email: str, image_url: str):
+    db_user = get_user(db, email)
+    db_user.profile_image_url = image_url
+    db.commit()
+    db.refresh(db_user)
+    return db_user

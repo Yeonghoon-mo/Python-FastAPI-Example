@@ -11,8 +11,8 @@ def get_boards(db: Session, skip: int = 0, limit: int = 100):
 def get_boards_count(db: Session):
     return db.query(Board).count()
 
-def create_board(db: Session, board: BoardCreate, user_id: str):
-    db_board = Board(**board.model_dump(), user_id=user_id)
+def create_board(db: Session, board: BoardCreate, user_id: str, image_url: str = None):
+    db_board = Board(**board.model_dump(), user_id=user_id, image_url=image_url)
     db.add(db_board)
     db.commit()
     db.refresh(db_board)

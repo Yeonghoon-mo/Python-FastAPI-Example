@@ -19,6 +19,7 @@ class UserUpdate(BaseModel):
 # 4. 응답 DTO (Response Body)
 class User(UserBase):
     is_active: bool
+    profile_image_url: Optional[str] = None
 
     # [ModelMapper] Entity -> DTO 변환
     model_config = ConfigDict(from_attributes=True)

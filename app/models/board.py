@@ -11,6 +11,9 @@ class Board(Base):
     title = Column(String(255), index=True)
     content = Column(Text)
     
+    # 첨부 이미지 경로 저장
+    image_url = Column(String(500), nullable=True)
+    
     # user_id는 users 테이블의 email 컬럼을 참조합니다.
     user_id = Column(String(255), ForeignKey("users.email"))
     

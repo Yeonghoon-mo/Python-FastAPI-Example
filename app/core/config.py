@@ -18,6 +18,9 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
 
+    # Uploads
+    UPLOAD_DIR: str = "static/uploads"
+
     # DB URL 자동 생성
     @property
     def SQLALCHEMY_DATABASE_URL(self) -> str:

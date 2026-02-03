@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File, Form
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.schemas.board import BoardCreate, BoardUpdate, BoardResponse
 from app.schemas.page import PageResponse
 from app.services import board_service
+from app.services.file_service import FileService
 from app.models.user import User
 
 router = APIRouter(
@@ -14,14 +15,24 @@ router = APIRouter(
     tags=["boards"],
 )
 
-# 글쓰기
+# 글쓰기 (JSON + Optional Image URL)
 @router.post("/", response_model=BoardResponse)
 def create_board(
     board: BoardCreate, 
+    image_url: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return board_service.create_new_board(db=db, board=board, user_id=current_user.email)
+    return board_service.create_new_board(db=db, board=board, user_id=current_user.email, image_url=image_url)
+
+# 첨부파일 업로드
+@router.post("/upload", response_model=dict)
+async def upload_attachment(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    image_url = await FileService.save_file(file, sub_dir="boards")
+    return {"image_url": image_url}
 
 # 목록 조회 (Pagination 적용)
 @router.get("/", response_model=PageResponse[BoardResponse])

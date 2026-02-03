@@ -6,8 +6,8 @@ from app.schemas.board import BoardCreate, BoardUpdate
 import math
 from app.schemas.page import PageResponse
 
-def create_new_board(db: Session, board: BoardCreate, user_id: str):
-    return board_repository.create_board(db=db, board=board, user_id=user_id)
+def create_new_board(db: Session, board: BoardCreate, user_id: str, image_url: str = None):
+    return board_repository.create_board(db=db, board=board, user_id=user_id, image_url=image_url)
 
 def get_boards_list(db: Session, page: int = 1, size: int = 10):
     skip = (page - 1) * size

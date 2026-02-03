@@ -1,8 +1,11 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 from app.routers import user_router, auth_router, board_router, comment_router
 from app.core.database import engine, Base
 from app.core.logger import setup_logger
+from app.core.config import settings
+import os
 
 # 로거 설정 초기화
 logger = setup_logger()
@@ -10,11 +13,18 @@ logger = setup_logger()
 # DB 테이블 자동 생성
 Base.metadata.create_all(bind=engine)
 
+# 업로드 디렉토리 생성
+if not os.path.exists(settings.UPLOAD_DIR):
+    os.makedirs(settings.UPLOAD_DIR, exist_ok=True)
+
 app = FastAPI(
     title="FastAPI MariaDB CRUD",
     description="Spring 개발자를 위한 FastAPI CRUD 예제 프로젝트",
     version="0.0.1"
 )
+
+# 정적 파일 서버 설정 (프로필 이미지 등)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # 라우터 등록
 app.include_router(auth_router.router)

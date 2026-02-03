@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.schemas.user import UserCreate, User, UserUpdate
 from app.services import user_service
+from app.services.file_service import FileService
 from app.models.user import User as UserModel # 타입 힌트용
 
 # [Spring: @RestController]
@@ -12,6 +13,28 @@ router = APIRouter(
     prefix="/users",
     tags=["users"],
 )
+
+# 프로필 이미지 업로드 (로그인 필수 + 본인만 가능)
+@router.post("/{email}/profile-image", response_model=User)
+async def upload_profile_image(
+    email: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: UserModel = Depends(get_current_user)
+):
+    # 본인 확인
+    if current_user.email != email:
+        raise HTTPException(status_code=403, detail="인증 실패")
+    
+    # 1. 기존 이미지가 있다면 삭제 (옵션: 필요 시)
+    if current_user.profile_image_url:
+        FileService.delete_file(current_user.profile_image_url)
+    
+    # 2. 새 이미지 저장
+    image_url = await FileService.save_file(file, sub_dir="profiles")
+    
+    # 3. DB 업데이트
+    return user_service.update_profile_image(db=db, email=email, image_url=image_url)
 
 # 회원가입 (누구나 가능)
 @router.post("/", response_model=User)
