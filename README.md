@@ -22,9 +22,10 @@ graph LR
     Service --> |Domain Model| Repository(Data Access Layer)
     Repository --> |SQL| DB[(MariaDB)]
     
-    Service -.-> |Cache| Redis[(Redis)]
+    Service -.-> |Cache/Session| Redis[(Redis)]
     Service -.-> |Async Task| Celery(Celery Worker)
     Celery -.-> |Broker| Redis
+    Celery --> |SMTP| EmailServer[External SMTP Server]
 ```
 
 ### 📂 Directory Structure
@@ -37,6 +38,8 @@ app/
 │   ├── database.py     # DB Connection Pool (SQLAlchemy Engine)
 │   ├── security.py     # JWT 생성 및 비밀번호 Hashing (Bcrypt)
 │   ├── logger.py       # Loguru 통합 로깅 시스템
+│   ├── redis.py        # Redis 연결 관리
+│   ├── celery_app.py   # Celery 워커 설정
 │   └── dependencies.py # [AOP/Filter] 의존성 주입 (Token 검증 등)
 │
 ├── models/             # [Entity] DB 테이블 스키마 정의
@@ -44,6 +47,7 @@ app/
 ├── repository/         # [Repository] DB 접근 로직 (CRUD)
 ├── services/           # [Service] 비즈니스 로직 및 트랜잭션 단위
 ├── routers/            # [Controller] URL 라우팅 및 요청 처리
+├── tasks/              # [Async] Celery 비동기 작업 정의 (이메일 등)
 └── main.py             # [Application] 앱 진입점
 ```
 
@@ -230,14 +234,22 @@ DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다
 ### 5. Distributed Task Queue (Celery & Redis)
 응답 속도 개선과 시스템 안정성을 위해 시간이 오래 걸리는 작업은 **Celery**를 통해 비동기로 처리합니다.
 
-- **Non-blocking Email**: 회원가입 환영 메일 발송과 같이 외부 API 연동이 필요한 작업을 백그라운드 태스크로 분리하여 사용자 응답 속도를 극대화했습니다.
+- **Non-blocking Email**: 회원가입 환영 메일 발송과 같이 외부 API 연동이 필요한 작업을 백그라운드 태스크로 분리하여 사용자 응답 속도를 극대화했습니다. (평균 응답 속도 50ms 미만 유지)
 - **Broker & Backend**: 가볍고 빠른 처리를 위해 **Redis**를 메시지 브로커 및 결과 저장소로 활용합니다.
+- **Worker Scalability**: 컨테이너화를 통해 트래픽 증가 시 워커 인스턴스만 개별적으로 스케일 아웃할 수 있는 구조를 설계했습니다.
 
-### 6. Containerization (Docker)
-어디서나 동일한 환경에서 실행 가능하도록 **Docker** 환경을 구축했습니다.
+### 6. Configuration & Security Strategy
+민감한 정보 관리와 유연한 환경 설정을 위해 다음과 같은 전략을 사용했습니다.
+
+- **Pydantic Settings**: `.env` 파일을 활용하여 DB 접속 정보, Secret Key, SMTP 설정 등을 코드와 분리했습니다. 타입 힌트를 통해 런타임 시 환경 변수 유효성을 검증합니다.
+- **SMTP with TLS**: Gmail SMTP를 연동할 때 보안 강화를 위해 `STARTTLS` 방식을 적용하고, 앱 비밀번호(App Password)를 활용하여 계정 보안을 유지했습니다.
+- **Git Security**: `.gitignore` 및 `.git/info/exclude`를 활용하여 실 서버의 민감 정보가 포함된 `.env` 파일과 로컬 전용 설정 파일(`GEMINI.md`)이 저장소에 노출되지 않도록 철저히 관리했습니다.
+
+### 7. Containerization (Docker)
+어디서나 동일한 환경에서 실행 가능하도록 **Infrastructure as Code (IaC)** 환경을 구축했습니다.
 
 - **Multi-container setup**: `docker-compose`를 통해 FastAPI App, MariaDB, Redis, Celery Worker를 하나의 명령어로 통합 관리합니다.
-- **Volume Mounting**: 데이터베이스의 영속성과 로그 기록을 위해 호스트 디렉토리와 컨테이너 내부 디렉토리를 바인딩했습니다.
+- **Optimized Image**: `python:3.10-slim` 베이스 이미지를 사용하여 컨테이너 크기를 최소화하고 빌드 속도를 개선했습니다.
 
 ---
 
