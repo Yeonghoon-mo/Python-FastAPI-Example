@@ -43,7 +43,9 @@ jobs:
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
-      # [배포 단계 - 실 서버가 있을 경우 활성화]
+      # ⚠️ 중요: 현재는 이미지 빌드 및 GHCR Push까지만 수행합니다.
+      # 실제 서버의 컨테이너를 업데이트하려면 아래 SSH 배포 단계를 활성화해야 합니다.
+      # GitHub Repository Secrets에 SERVER_HOST, SERVER_USER, SSH_PRIVATE_KEY 등록 필수!
       # - name: Deploy to Server via SSH
       #   uses: appleboy/ssh-action@master
       #   with:
@@ -51,6 +53,7 @@ jobs:
       #     username: ${{ secrets.SERVER_USER }}
       #     key: ${{ secrets.SSH_PRIVATE_KEY }}
       #     script: |
-      #       cd /home/ubuntu/app
+      #       cd /home/ubuntu/app  # docker-compose.yml이 있는 경로
       #       docker-compose pull
       #       docker-compose up -d
+      #       docker image prune -f  # 미사용 이미지 정리

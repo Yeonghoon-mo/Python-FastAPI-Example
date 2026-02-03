@@ -302,10 +302,15 @@ DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다
 - **Cause**: GitHub 계정명(`Yeonghoon-mo`)에 대문자가 포함되어 있으나, 도커 이미지 태그는 반드시 소문자여야 함.
 - **Solution**: GitHub Actions 워크플로우에서 계정명을 소문자로 변환하는 전처리 단계(`${OWNER,,}`)를 추가하여 해결.
 
-### 7. GitHub Packages Repository Linking
-- **Issue**: 깃허브 패키지 탭에 이미지는 올라가지만, 소스 코드 레포지토리와 연결되지 않음.
-- **Cause**: Docker 빌드 시 레포지토리 정보를 담은 메타데이터(Label)가 누락됨.
-- **Solution**: Dockerfile 또는 빌드 액션 설정에 `org.opencontainers.image.source` 라벨을 추가하여 레포지토리와 패키지를 명시적으로 연결.
+### 8. GitHub Actions CI Failure (Static Directory Missing)
+- **Issue**: `RuntimeError: Directory '/.../app/static' does not exist` 발생.
+- **Cause**: Git은 빈 디렉토리를 추적하지 않으므로, CI 환경(Ubuntu)에서 앱 실행 시 마운트할 `static` 디렉토리가 존재하지 않음.
+- **Solution**: `app/main.py` 코드 내에서 `StaticFiles`를 마운트하기 직전에 해당 디렉토리가 없으면 자동으로 생성하는 방어 로직 추가.
+
+### 9. Docker CD Success but Container Not Updated
+- **Issue**: CD 워크플로우는 성공(Green)으로 표시되지만, 실제 서버의 도커 컨테이너는 기존 버전을 유지함.
+- **Cause**: 현재 CD 설정이 이미지를 빌드하여 GHCR에 **Push**하는 단계까지만 구현되어 있음. 서버에서 새 이미지를 **Pull** 받고 컨테이너를 **Restart**하는 배포(Deployment) 로직이 주석 처리되어 있거나 Secret 미설정으로 작동하지 않음.
+- **Solution**: `cd.yml` 내 배포 섹션(SSH 연동 등)을 활성화하고, GitHub Repository Secrets에 서버 접속 정보(`SERVER_HOST`, `SSH_PRIVATE_KEY` 등)를 등록하여 자동 배포를 완성해야 함.
 
 ---
 
