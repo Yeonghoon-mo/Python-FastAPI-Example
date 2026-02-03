@@ -253,7 +253,31 @@ DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다
 
 ---
 
-## 🗺️ Roadmap & Future Plans
+## 🛠 Troubleshooting (Issue Solving)
+
+개발 과정에서 발생한 기술적 문제들과 이를 해결한 과정을 기록합니다.
+
+### 1. Bcrypt & Passlib Compatibility Issue
+- **Issue**: `AttributeError: module 'bcrypt' has no attribute '__about__'` 발생.
+- **Cause**: 최신 버전의 `bcrypt` 라이브러리에서 `passlib`이 참조하던 내부 속성이 변경/제거됨.
+- **Solution**: `bcrypt` 버전을 호환 가능한 `4.0.1`로 하향 조정하여 해결.
+
+### 2. Static Files Directory Error
+- **Issue**: `RuntimeError: Directory 'static' does not exist` 발생.
+- **Cause**: 실행 환경(CWD)에 따라 상대 경로가 달라져서 발생하는 문제. 특히 IntelliJ에서 직접 실행 시 경로 인식이 꼬임.
+- **Solution**: `config.py`에서 `BASE_DIR`을 기반으로 한 **절대 경로**를 생성하고, `app.mount()` 시 이를 사용하도록 수정하여 실행 환경 독립성 확보.
+
+### 3. Celery Unregistered Task Error
+- **Issue**: `Received unregistered task of type 'app.tasks.email_task.send_welcome_email'` 발생.
+- **Cause**: Celery 워커가 실행될 때 비동기 태스크가 정의된 모듈을 로드하지 못함.
+- **Solution**: `Celery` 인스턴스 생성 시 `include=["app.tasks.email_task"]` 옵션을 추가하여 명시적으로 태스크 모듈을 등록.
+
+### 4. Pydantic Response Validation Error
+- **Issue**: API 응답 시 `ResponseValidationError` 발생.
+- **Cause**: 응답 DTO(Pydantic)에는 필드가 정의되어 있으나, 실제 DB 모델(SQLAlchemy)에는 해당 컬럼이 없거나 이름이 다름. (예: `id` vs `email`)
+- **Solution**: DB PK 전략(Email PK)에 맞춰 DTO 필드를 조정하고, `model_config = ConfigDict(from_attributes=True)` 설정을 통해 엔티티 변환 정합성 확보.
+
+---
 
 **Mo Yeonghoon**
 - Backend Developer (Java/Kotlin, Python)
