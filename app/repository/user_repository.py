@@ -12,6 +12,12 @@ async def get_user(db: AsyncSession, email: str):
     result = await db.execute(stmt)
     return result.scalars().first()
 
+# 모든 유저 조회
+async def get_users(db: AsyncSession, skip: int = 0, limit: int = 100):
+    stmt = select(User).offset(skip).limit(limit)
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
 # 유저 생성 (비밀번호가 있는 경우만 BCrypt 적용)
 async def create_user(db: AsyncSession, user: UserCreate | User):
     if isinstance(user, User):

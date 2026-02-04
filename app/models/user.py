@@ -1,6 +1,13 @@
-from sqlalchemy import Boolean, Column, String
+import enum
+from sqlalchemy import Boolean, Column, String, Enum
 from sqlalchemy.orm import relationship
 from app.core.database import Base
+
+# [역할 정의 Enum]
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    USER = "user"
+    GUEST = "guest"
 
 # [JPA: @Entity]
 class User(Base):
@@ -14,6 +21,9 @@ class User(Base):
     # [JPA: @Column]
     # 소셜 로그인의 경우 비밀번호가 없을 수 있으므로 nullable=True로 변경
     password = Column(String(255), nullable=True)
+
+    # 권한 역할 (admin, user, guest)
+    role = Column(Enum(UserRole), default=UserRole.USER, nullable=False)
 
     # 인증 제공자 (local, google, github 등)
     provider = Column(String(50), default="local", nullable=False)

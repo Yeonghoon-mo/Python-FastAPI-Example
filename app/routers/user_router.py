@@ -2,17 +2,26 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user
+from app.core.dependencies import get_current_user, RoleChecker
 from app.schemas.user import UserCreate, User, UserUpdate
 from app.services import user_service
 from app.services.file_service import FileService
-from app.models.user import User as UserModel # 타입 힌트용
+from app.models.user import User as UserModel, UserRole # 타입 힌트 및 역할 Enum
 
 # [Spring: @RestController]
 router = APIRouter(
     prefix="/users",
     tags=["users"],
 )
+
+# 권한 가드 정의
+admin_only = RoleChecker([UserRole.ADMIN])
+
+# 모든 유저 조회 (관리자 전용)
+@router.get("/", response_model=list[User], dependencies=[Depends(admin_only)])
+async def read_all_users(db: AsyncSession = Depends(get_db)):
+    """관리자만 모든 유저 목록을 볼 수 있습니다."""
+    return await user_service.get_users(db=db)
 
 # 프로필 이미지 업로드 (로그인 필수 + 본인만 가능)
 @router.post("/{email}/profile-image", response_model=User)

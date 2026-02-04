@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
+from app.models.user import UserRole
 
 # [DTO: Data Transfer Object]
 
@@ -7,15 +8,17 @@ from typing import Optional
 class UserBase(BaseModel):
     # 이메일 정규식 유효성 검사 추가
     email: str = Field(..., pattern=r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+    role: UserRole = UserRole.USER
 
 # 2. 생성 요청 DTO (Request Body)
 class UserCreate(UserBase):
-    password: str
+    password: Optional[str] = None # 소셜 가입 시 없을 수 있으므로 Optional
 
 # 3. 수정 요청 DTO (Request Body) - [New!]
 class UserUpdate(BaseModel):
     password: Optional[str] = None
     is_active: Optional[bool] = None
+    role: Optional[UserRole] = None
 
 # 4. 응답 DTO (Response Body)
 class User(UserBase):

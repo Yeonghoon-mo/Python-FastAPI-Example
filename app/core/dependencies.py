@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.config import settings
 from app.repository import user_repository
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.core.redis import redis_client
 
 # 토큰을 직접 입력할 수 있는 Bearer Token 스키마 설정
@@ -49,3 +49,20 @@ async def get_current_user(
         raise credentials_exception
         
     return user
+
+# [RBAC 의존성] 특정 역할을 가진 유저만 허용
+class RoleChecker:
+    def __init__(self, allowed_roles: list[UserRole]):
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, current_user: User = Depends(get_current_user)):
+        if current_user.role not in self.allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have enough permissions to access this resource"
+            )
+        return current_user
+
+# 사용 예시:
+# admin_only = RoleChecker([UserRole.ADMIN])
+# user_only = RoleChecker([UserRole.ADMIN, UserRole.USER])

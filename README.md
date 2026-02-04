@@ -56,11 +56,12 @@ app/
 ## ✨ Key Features
 
 ### 🔐 1. Authentication & Security
+- **RBAC (Role-Based Access Control)**: Admin, User, Guest로 권한을 세분화하여 API 접근 제어 시스템 구축.
 - **Social Login Only**: 사용자 편의성과 보안을 위해 일반 아이디/비밀번호 방식을 제거하고 소셜 로그인(OAuth2)으로만 인증하도록 설계.
 - **Google & Kakao OAuth2**: Google 및 Kakao 소셜 로그인 연동 및 신규 유저 자동 가입 로직 구현.
 - **JWT (JSON Web Token)**: 소셜 인증 완료 후 서버 자체 JWT를 발급하여 통합 세션 관리.
 - **HTTPBearer**: Swagger UI에서 소셜 토큰을 직접 입력하여 테스트할 수 있는 환경 구축.
-- `Depends(get_current_user)`를 통한 엔드포인트별 권한 제어 (Guard).
+- `Depends(RoleChecker)`를 통한 선언적 권한 검증 (Guard) 적용.
 
 ### 🛠 2. Robust CRUD Operations
 - **Clean Code**: Router → Service → Repository 흐름의 명확한 역할 분리.
@@ -184,9 +185,8 @@ DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다
 - [x] **Metrics**: Prometheus & Grafana를 활용한 서버 리소스 및 트래픽 시각화 환경 구축
 
 ### Phase 5: Security & User Experience (🚧 In Progress)
-- [ ] **OAuth2**: Google(✅), GitHub, Kakao(✅) 등 소셜 로그인 연동
-    - Google 및 Kakao 로그인 연동 및 자체 JWT 발급 로직 구현 완료
-- [ ] **RBAC**: Role-Based Access Control (Admin, User, Guest) 권한 체계 세분화
+- [x] **OAuth2**: Google(✅), Kakao(✅) 소셜 로그인 연동 및 통합 JWT 발급 완료
+- [x] **RBAC**: Role-Based Access Control (Admin, User, Guest) 권한 체계 세분화 완료
 - [ ] **SSL/TLS**: Let's Encrypt를 활용한 HTTPS 적용 (Nginx Reverse Proxy)
 
 ### Phase 6: Performance & Stability
@@ -213,7 +213,14 @@ DB 스키마 변경 사항을 관리하기 위해 **Alembic**을 사용합니다
 
 ## 🛠 Technical Deep Dive (Portfolio)
 
-### 1. Social Login Strategy (OAuth2)
+### 1. RBAC (Role-Based Access Control) Implementation
+엔터프라이즈 환경에서의 체계적인 권한 관리를 위해 RBAC 시스템을 구축했습니다.
+
+- **UserRole Enum**: `Enum` 클래스를 사용하여 역할(ADMIN, USER, GUEST)을 정의하고, DB 컬럼 타입으로 매핑하여 데이터 무결성을 확보했습니다.
+- **Declarative Guard (RoleChecker)**: FastAPI의 의존성 주입(DI) 시스템을 활용하여, 컨트롤러 계층에서 `dependencies=[Depends(admin_only)]`와 같이 선언적으로 권한을 제한할 수 있는 `RoleChecker` 클래스를 구현했습니다.
+- **Granular Access Control**: '내 정보 수정'은 본인만, '전체 유저 조회' 및 '강제 탈퇴'는 관리자만 가능하도록 API 레벨에서 세밀하게 권한을 분리했습니다.
+
+### 2. Social Login Strategy (OAuth2)
 Google 및 Kakao 소셜 로그인을 Spring Boot의 서비스 추상화 패턴을 벤치마킹하여 구현했습니다.
 
 - **Multi-Provider Support**: `GoogleAuthService`와 `KakaoAuthService`를 각각 분리 구현하여 확장성을 확보했습니다.

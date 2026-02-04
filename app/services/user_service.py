@@ -25,6 +25,9 @@ async def get_user(db: AsyncSession, email: str):
         raise HTTPException(status_code=404, detail="해당 Email의 유저가 존재하지 않습니다.")
     return db_user
 
+async def get_users(db: AsyncSession, skip: int = 0, limit: int = 100):
+    return await user_repository.get_users(db, skip=skip, limit=limit)
+
 # 유저 수정
 async def update_user(db: AsyncSession, email: str, user_update: UserUpdate):
     # 1. 수정할 유저가 존재하는지 확인
