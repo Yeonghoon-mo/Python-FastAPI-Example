@@ -6,8 +6,8 @@
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white)
 ![Pydantic](https://img.shields.io/badge/Pydantic-V2-E92063?style=for-the-badge&logo=pydantic&logoColor=white)
 
-> **Spring Boot의 견고한 구조를 이식한 엔터프라이즈급 FastAPI 보일러플레이트**  
-> "Spring의 **3-Tier Architecture**와 FastAPI의 **Asynchronous I/O**가 만나다."
+> **Spring Boot의 계층형 아키텍처를 이식한 고성능 FastAPI 보일러플레이트**  
+> "확장성과 유지보수성을 극대화한 엔터프라이즈급 비동기 API 서버 구조 설계"
 
 ---
 
