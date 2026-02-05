@@ -9,8 +9,8 @@ async def test_create_user_api(client: AsyncClient):
         "password": "testpassword123"
     }
     
-    # API 호출 (prefix /api 추가)
-    response = await client.post("/api/users/", json=user_data)
+    # API 호출 (prefix /api/v1 추가)
+    response = await client.post("/api/v1/users/", json=user_data)
     
     # 응답 검증
     assert response.status_code == 200

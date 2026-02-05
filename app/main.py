@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 import uvicorn
 from contextlib import asynccontextmanager
-from app.routers import user_router, auth_router, board_router, comment_router
+from app.routers.v1 import auth_router, user_router, board_router, comment_router
 from app.core.database import engine, Base
 from app.core.logger import setup_logger
 from app.core.config import settings
@@ -44,11 +44,11 @@ if not os.path.exists(settings.STATIC_DIR):
     os.makedirs(settings.STATIC_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(settings.STATIC_DIR)), name="static")
 
-# 라우터 등록
-app.include_router(auth_router.router, prefix="/api")
-app.include_router(user_router.router, prefix="/api")
-app.include_router(board_router.router, prefix="/api")
-app.include_router(comment_router.router, prefix="/api")
+# 라우터 등록 (v1)
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(user_router, prefix="/api/v1")
+app.include_router(board_router, prefix="/api/v1")
+app.include_router(comment_router, prefix="/api/v1")
 
 @app.get("/")
 async def root():
