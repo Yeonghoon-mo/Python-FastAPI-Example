@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from prometheus_fastapi_instrumentator import Instrumentator
 import uvicorn
@@ -34,6 +35,15 @@ app = FastAPI(
     description="Spring Boot의 견고한 구조를 이식한 엔터프라이즈급 FastAPI 보일러플레이트",
     version="0.0.1",
     lifespan=lifespan
+)
+
+# CORS 설정
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # 실제 운영 환경에서는 허용할 도메인만 명시해야 해
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Prometheus 메트릭 설정 (Instrumentator)

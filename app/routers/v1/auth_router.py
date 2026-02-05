@@ -8,7 +8,9 @@ from app.services import auth_service, google_auth_service, kakao_auth_service
 from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.core.rate_limiter import RateLimiter
+from app.core.logger import setup_logger
 
+logger = setup_logger()
 router = APIRouter(tags=["authentication"])
 
 # [Google 로그인 시작 API]
@@ -16,7 +18,7 @@ router = APIRouter(tags=["authentication"])
     "/auth/google", 
     dependencies=[Depends(RateLimiter(times=5, seconds=60))],
     summary="Google 로그인 시작",
-    description="사용자를 Google OAuth2 로그인 페이지로 리다이렉트합니다. **1분에 5회**로 요청이 제한됩니다.",
+    description="사용자를 Google OAuth2 로그인 페이지로 리다이렉트합니다. **1분에 5회**로 요청이 제한됩니다. (주의: Swagger 'Execute' 버튼 대신 브라우저에서 직접 URL로 접속하세요.)",
     responses={
         307: {"description": "Google 로그인 페이지로 리다이렉트 성공"},
         429: {"description": "요청 횟수 초과"}
@@ -24,6 +26,7 @@ router = APIRouter(tags=["authentication"])
 )
 async def google_login():
     """Google 로그인 페이지로 리다이렉트"""
+    logger.info("Google login initiation requested")
     auth_url = await google_auth_service.get_google_auth_url()
     return RedirectResponse(url=auth_url)
 
@@ -43,6 +46,7 @@ async def google_login():
 )
 async def google_callback(code: str, db: AsyncSession = Depends(get_db)):
     """Google 인증 후 자체 토큰 발급"""
+    logger.info(f"Google callback received with code: {code[:10]}...")
     return await google_auth_service.authenticate_google_user(db=db, code=code)
 
 # [Kakao 로그인 시작 API]
